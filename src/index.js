@@ -90,23 +90,38 @@ class MensagemAutomaticaSystem {
             next();
         });
 
-        // Rota de health check
-        this.app.get('/health', async (req, res) => {
-            try {
-                const status = {
-                    system: 'online',
-                    database: await databaseService.healthCheck(),
-                    woocommerce: { status: woocommerceService.isServiceOnline() ? 'online' : 'offline' },
-                    whatsapp: { status: whatsappService.isServiceOnline() ? 'online' : 'offline' },
-                    lastCheck: this.lastCheck,
-                    pendingOrders: this.pendingOrdersQueue.length
-                };
-                
-                res.json(status);
-            } catch (error) {
-                res.status(500).json({ error: error.message });
-            }
+            // Rota de health check
+    this.app.get('/health', async (req, res) => {
+        try {
+            const status = {
+                system: 'online',
+                database: await databaseService.healthCheck(),
+                woocommerce: { status: woocommerceService.isServiceOnline() ? 'online' : 'offline' },
+                whatsapp: { status: whatsappService.isServiceOnline() ? 'online' : 'offline' },
+                lastCheck: this.lastCheck,
+                pendingOrders: this.pendingOrdersQueue.length,
+                timestamp: new Date().toISOString(),
+                uptime: process.uptime()
+            };
+            
+            res.status(200).json(status);
+        } catch (error) {
+            res.status(500).json({ 
+                error: error.message,
+                system: 'error',
+                timestamp: new Date().toISOString()
+            });
+        }
+    });
+
+    // Rota de health check simples para Railway
+    this.app.get('/', (req, res) => {
+        res.status(200).json({ 
+            status: 'online',
+            service: 'mensagem-automatica',
+            timestamp: new Date().toISOString()
         });
+    });
 
         // Rota de status do sistema
         this.app.get('/status', async (req, res) => {
@@ -448,12 +463,29 @@ process.on('SIGTERM', () => system.shutdown());
 // Tratamento de erros não capturados
 process.on('uncaughtException', async (error) => {
     console.error('❌ Erro não capturado:', error);
-    await logger.logError('Erro não capturado do sistema', error);
-    process.exit(1);
+    try {
+        await logger.logError('Erro não capturado do sistema', error);
+    } catch (logError) {
+        console.error('❌ Erro ao logar erro:', logError);
+    }
+    
+    // Não mata o processo imediatamente
+    console.log('🔄 Tentando continuar execução...');
 });
 
 process.on('unhandledRejection', async (reason, promise) => {
     console.error('❌ Promise rejeitada não tratada:', reason);
-    await logger.logError('Promise rejeitada não tratada', reason);
-    process.exit(1);
+    try {
+        await logger.logError('Promise rejeitada não tratada', reason);
+    } catch (logError) {
+        console.error('❌ Erro ao logar erro:', logError);
+    }
+    
+    // Não mata o processo imediatamente
+    console.log('🔄 Tentando continuar execução...');
 });
+
+// Keep-alive para Railway
+setInterval(() => {
+    console.log('💓 Keep-alive: Sistema funcionando...');
+}, 30000); // A cada 30 segundos
