@@ -55,7 +55,7 @@ class Logger {
     }
 
     async logError(mensagem, error = null) {
-        await this.logError('error', mensagem, error);
+        await this.log('error', mensagem, error);
     }
 
     async logSuccess(mensagem) {
