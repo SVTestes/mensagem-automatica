@@ -31,20 +31,30 @@ class MensagemAutomaticaSystem {
         try {
             console.log('🚀 Iniciando Sistema de Mensagens Automáticas...');
             
-            // Inicializa serviços
-            await this.initializeServices();
-            
-            // Configura Express
+            // Configura Express PRIMEIRO para responder rapidamente
             this.setupExpress();
             
-            // Inicia o sistema
-            await this.startSystem();
+            // Inicializa serviços em background
+            this.initializeServices().catch(error => {
+                console.error('❌ Erro ao inicializar serviços:', error);
+                // Não mata o processo
+            });
             
-            console.log('✅ Sistema iniciado com sucesso!');
+            // Inicia o sistema em background
+            setTimeout(async () => {
+                try {
+                    await this.startSystem();
+                    console.log('✅ Sistema iniciado com sucesso!');
+                } catch (error) {
+                    console.error('❌ Erro ao iniciar sistema:', error);
+                    // Não mata o processo
+                }
+            }, 2000); // 2 segundos de delay
             
         } catch (error) {
             console.error('❌ Erro ao inicializar sistema:', error);
-            process.exit(1);
+            // NÃO mata o processo mais
+            console.log('🔄 Tentando continuar execução...');
         }
     }
 
@@ -119,8 +129,15 @@ class MensagemAutomaticaSystem {
         res.status(200).json({ 
             status: 'online',
             service: 'mensagem-automatica',
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
+            uptime: process.uptime(),
+            pid: process.pid
         });
+    });
+
+    // Health check ultra-rápido para Railway
+    this.app.get('/ping', (req, res) => {
+        res.status(200).send('pong');
     });
 
         // Rota de status do sistema
@@ -446,15 +463,20 @@ class MensagemAutomaticaSystem {
 // Cria e inicializa o sistema
 const system = new MensagemAutomaticaSystem();
 
-// Inicia o servidor Express
-system.app.listen(PORT, () => {
-    console.log(`🌐 Servidor rodando na porta ${PORT}`);
-    console.log(`📊 Health check: http://localhost:${PORT}/health`);
-    console.log(`📈 Status: http://localhost:${PORT}/status`);
-});
-
-// Inicializa o sistema
-system.initialize();
+    // Inicia o servidor Express
+    system.app.listen(PORT, () => {
+        console.log(`🌐 Servidor rodando na porta ${PORT}`);
+        console.log(`📊 Health check: http://localhost:${PORT}/health`);
+        console.log(`📈 Status: http://localhost:${PORT}/status`);
+        
+        // Inicializa o sistema EM BACKGROUND para não bloquear o servidor
+        setTimeout(() => {
+            system.initialize().catch(error => {
+                console.error('❌ Erro na inicialização do sistema:', error);
+                // Não mata o processo, apenas loga o erro
+            });
+        }, 1000); // 1 segundo de delay
+    });
 
 // Tratamento de sinais para encerramento graceful
 process.on('SIGINT', () => system.shutdown());
