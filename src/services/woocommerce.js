@@ -19,7 +19,7 @@ class WooCommerceService {
                     consumer_secret: this.consumerSecret,
                     per_page: 1
                 },
-                timeout: 10000
+                timeout: 30000
             });
 
             this.isOnline = response.status === 200;
@@ -52,7 +52,7 @@ class WooCommerceService {
                     order: 'desc',
                     status: 'processing' // Filtra apenas pedidos processando
                 },
-                timeout: 15000
+                timeout: 30000
             });
 
             if (response.status !== 200) {
@@ -91,7 +91,7 @@ class WooCommerceService {
                     consumer_key: this.consumerKey,
                     consumer_secret: this.consumerSecret
                 },
-                timeout: 10000
+                timeout: 30000
             });
 
             if (response.status !== 200) {
@@ -138,7 +138,7 @@ class WooCommerceService {
                     per_page: 1,
                     status: 'processing'
                 },
-                timeout: 10000
+                timeout: 30000
             });
 
             const totalProcessing = parseInt(response.headers['x-wp-total'] || '0');
