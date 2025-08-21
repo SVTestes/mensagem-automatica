@@ -9,10 +9,28 @@ class WooCommerceService {
         this.consumerSecret = process.env.WOOCOMMERCE_CONSUMER_SECRET;
         this.isOnline = false;
         this.lastCheck = null;
+        
+        // Validação das variáveis de ambiente
+        if (!this.baseURL) {
+            console.error('❌ ERRO CRÍTICO: WOOCOMMERCE_URL não está definida!');
+            console.error('❌ Variáveis encontradas:', {
+                WOOCOMMERCE_URL: this.baseURL,
+                WOOCOMMERCE_CONSUMER_KEY: this.consumerKey ? 'DEFINIDA' : 'NÃO DEFINIDA',
+                WOOCOMMERCE_CONSUMER_SECRET: this.consumerSecret ? 'DEFINIDA' : 'NÃO DEFINIDA'
+            });
+        } else {
+            console.log('✅ WOOCOMMERCE_URL configurada:', this.baseURL);
+        }
     }
 
     async checkConnection() {
         try {
+            console.log('🔍 Testando conexão WooCommerce...');
+            console.log('🔍 URL base:', this.baseURL);
+            console.log('🔍 URL completa:', `${this.baseURL}/wp-json/wc/v3/products`);
+            console.log('🔍 Consumer Key:', this.consumerKey ? 'DEFINIDA' : 'NÃO DEFINIDA');
+            console.log('🔍 Consumer Secret:', this.consumerSecret ? 'DEFINIDA' : 'NÃO DEFINIDA');
+            
             const response = await axios.get(`${this.baseURL}/wp-json/wc/v3/products`, {
                 params: {
                     consumer_key: this.consumerKey,
