@@ -47,6 +47,16 @@ class WooCommerceService {
             return this.isOnline;
         } catch (error) {
             this.isOnline = false;
+            
+            // Log detalhado do erro para debug
+            console.error('❌ ERRO DETALHADO WooCommerce:');
+            console.error('❌ Status:', error.response?.status);
+            console.error('❌ Status Text:', error.response?.statusText);
+            console.error('❌ Data:', error.response?.data);
+            console.error('❌ Headers:', error.response?.headers);
+            console.error('❌ URL tentada:', `${this.baseURL}/wp-json/wc/v3/products`);
+            console.error('❌ Erro completo:', error.message);
+            
             await logger.logError('WooCommerce API está offline', error);
             return false;
         }
@@ -97,6 +107,15 @@ class WooCommerceService {
 
         } catch (error) {
             this.isOnline = false;
+            
+            // Log detalhado do erro para debug
+            console.error('❌ ERRO DETALHADO ao buscar pedidos:');
+            console.error('❌ Status:', error.response?.status);
+            console.error('❌ Status Text:', error.response?.statusText);
+            console.error('❌ Data:', error.response?.data);
+            console.error('❌ URL tentada:', `${this.baseURL}/wp-json/wc/v3/orders`);
+            console.error('❌ Erro completo:', error.message);
+            
             await logger.logError('Erro ao buscar pedidos do WooCommerce', error);
             throw error;
         }
